@@ -17,7 +17,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
 //회원가입
-app.post("/auth/join", (req, res) => {
+app.post("/auth/register", (req, res) => {
   try {
     db.collection("login").findOne(
       { nickname: req.body.nickname },
