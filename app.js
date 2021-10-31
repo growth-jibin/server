@@ -8,6 +8,7 @@ const passport = require("passport");
 const LocalStrategy = require("passport-local").Strategy;
 const session = require("express-session");
 const crypto = require("crypto");
+const { fail } = require("assert");
 require("dotenv").config();
 
 var db;
@@ -15,6 +16,8 @@ var db;
 app.use(methodOverride("_method"));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
+app.use(passport.initialize());
+app.use(passport.session());
 
 //회원가입
 app.post("/auth/register", (req, res) => {
@@ -53,6 +56,18 @@ app.post("/auth/register", (req, res) => {
   } catch (e) {
     console.log(e);
   }
+});
+//로그인
+app.post("/auth/login", (req, res) => {
+  passport.authenticate(
+    "local",
+    {
+      failureRedirect: "fail",
+    },
+    (req, res) => {
+      res.redirect("/");
+    }
+  );
 });
 
 //몽고DB 연결
