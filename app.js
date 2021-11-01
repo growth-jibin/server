@@ -7,6 +7,7 @@ const methodOverride = require("method-override");
 const passport = require("passport");
 const LocalStrategy = require("passport-local").Strategy;
 const session = require("express-session");
+const { text } = require("body-parser");
 const crypto = require("crypto");
 const { fail } = require("assert");
 require("dotenv").config();
@@ -16,6 +17,43 @@ var db;
 app.use(methodOverride("_method"));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
+app.use(
+  session({
+    secret: "baegteun",
+    resave: true,
+    saveUninitialized: false,
+  })
+);
+passport.use(
+  new LocalStrategy(
+    {
+      usernameField: "nickname",
+      userwordField: "password",
+      session: true,
+      passReqToCallback: false,
+    },
+    (nickname, pw, done) => {
+      console.log(pw);
+      var cipher = crypto.createCipher("aes-256-ecb", pw);
+      cipher.update(pw, "utf8");
+      var cipheredpw = cipher.final("hex");
+      db.collection("login").findOne({ nickname: nickname }, (err, result) => {
+        {
+          if (err) {
+            return done(err);
+          }
+          if (!result) {
+            return done(null, false, { message: "존재하지 않는 아이디" });
+          } else if (cipheredpw == result.password) {
+            return done(null, result);
+          } else {
+            return done(null, false, { message: "일치하지 않는 비번" });
+          }
+        }
+      });
+    }
+  )
+);
 app.use(passport.initialize());
 app.use(passport.session());
 
@@ -58,16 +96,17 @@ app.post("/auth/register", (req, res) => {
   }
 });
 //로그인
-app.post("/auth/login", (req, res) => {
-  passport.authenticate(
-    "local",
-    {
-      failureRedirect: "fail",
-    },
+app.post("/login", (req, res) => {
+  passport.authenticate("local", {
+    failureRedirect: "/fail",
+  }),
     (req, res) => {
-      res.redirect("/");
-    }
-  );
+      res.send("/");
+    };
+});
+//id를 이용하여 세션을 저장
+passport.serializeUser((user, done) => {
+  done(null, user.nickname);
 });
 
 //몽고DB 연결
