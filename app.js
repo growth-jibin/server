@@ -19,40 +19,10 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(
   session({
-    secret: "baegteun",
+    secret: "비밀코드",
     resave: true,
     saveUninitialized: false,
   })
-);
-passport.use(
-  new LocalStrategy(
-    {
-      usernameField: "nickname",
-      userwordField: "password",
-      session: true,
-      passReqToCallback: false,
-    },
-    (nickname, pw, done) => {
-      console.log(pw);
-      var cipher = crypto.createCipher("aes-256-ecb", pw);
-      cipher.update(pw, "utf8");
-      var cipheredpw = cipher.final("hex");
-      db.collection("login").findOne({ nickname: nickname }, (err, result) => {
-        {
-          if (err) {
-            return done(err);
-          }
-          if (!result) {
-            return done(null, false, { message: "존재하지 않는 아이디" });
-          } else if (cipheredpw == result.password) {
-            return done(null, result);
-          } else {
-            return done(null, false, { message: "일치하지 않는 비번" });
-          }
-        }
-      });
-    }
-  )
 );
 app.use(passport.initialize());
 app.use(passport.session());
@@ -96,15 +66,43 @@ app.post("/auth/register", (req, res) => {
   }
 });
 //로그인
-app.post("/login", (req, res) => {
+app.post(
+  "/auth/login",
   passport.authenticate("local", {
     failureRedirect: "/fail",
   }),
-    (req, res) => {
-      res.send("/");
-    };
-});
-//id를 이용하여 세션을 저장
+  (req, res) => {
+    res.send("/");
+  }
+);
+
+passport.use(
+  new LocalStrategy(
+    {
+      usernameField: "nickname",
+      userwordField: "passowrd",
+      session: true,
+      passReqToCallback: false,
+    },
+    (name, pw, done) => {
+      //console.log(name, pw);
+      db.collection("login").findOne({ nickname: name }, (err, result) => {
+        if (err) {
+          return done(err);
+        }
+        if (!result) {
+          return done(null, false, { message: "존재하지 않는 아이디" });
+        }
+        if (pw == result.password) {
+          return done(null, result);
+        } else {
+          return done(null, false, { message: "일치하지 않는 비밀번호" });
+        }
+      });
+    }
+  )
+);
+
 passport.serializeUser((user, done) => {
   done(null, user.nickname);
 });
