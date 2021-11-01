@@ -85,7 +85,9 @@ passport.use(
       passReqToCallback: false,
     },
     (name, pw, done) => {
-      //console.log(name, pw);
+      var cipher = crypto.createCipher("ase-256-ecb", pw);
+      cipher.update(pw, "utf8");
+      var cipheredpassword = cipher.final("hax");
       db.collection("login").findOne({ nickname: name }, (err, result) => {
         if (err) {
           return done(err);
@@ -93,7 +95,7 @@ passport.use(
         if (!result) {
           return done(null, false, { message: "존재하지 않는 아이디" });
         }
-        if (pw == result.password) {
+        if (cipheredpassword == result.password) {
           return done(null, result);
         } else {
           return done(null, false, { message: "일치하지 않는 비밀번호" });
