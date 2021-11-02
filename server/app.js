@@ -128,15 +128,27 @@ app.post("/add", (req, res) => {
     },
     (err) => {
       if (err) {
-        res.status(400).send("/fail");
+        res.status(400).send({ message: "실패" });
       }
-      res.status(200).send("/list");
+      res.status(200).send({ message: "성공" });
     }
   );
 });
 
 //데이터 삭제
-
+app.delete("/delete", (req, res) => {
+  try {
+    db.collection("memo").deleteOne({ _id: req.body._id }, (err, result) => {
+      if (err) {
+        console.log(err);
+        res.status(400).send({ message: "삭제 실패" });
+      }
+      res.status(200).send({ message: "삭제 성공" });
+    });
+  } catch (e) {
+    console.log(e);
+  }
+});
 //몽고DB 연결
 MongoClient.connect(process.env.DB_URL, (err, client) => {
   if (err) {
