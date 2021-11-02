@@ -76,6 +76,7 @@ app.post(
   }
 );
 
+//로그인 판단 코드
 passport.use(
   new LocalStrategy(
     {
@@ -109,10 +110,30 @@ passport.use(
   )
 );
 
+//user에 맞는 세션 생성
 passport.serializeUser((user, done) => {
   done(null, user.nickname);
 });
 
+//메모데이터 삽입
+app.post("/add", (req, res) => {
+  db.collection("memo").insertOne(
+    {
+      title: req.body.title,
+      contents: req.body.contents,
+      tag: req.body.tag,
+      user: req.body.user,
+      date: req.body.date,
+      color: req.body.color,
+    },
+    (err) => {
+      if (err) {
+        res.status(400).send("/fail");
+      }
+      res.status(200).send("/list");
+    }
+  );
+});
 //몽고DB 연결
 MongoClient.connect(process.env.DB_URL, (err, client) => {
   if (err) {
