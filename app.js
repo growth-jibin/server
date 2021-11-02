@@ -85,22 +85,26 @@ passport.use(
       passReqToCallback: false,
     },
     (name, pw, done) => {
-      var cipher = crypto.createCipher("ase-256-ecb", pw);
-      cipher.update(pw, "utf8");
-      var cipheredpassword = cipher.final("hax");
-      db.collection("login").findOne({ nickname: name }, (err, result) => {
-        if (err) {
-          return done(err);
-        }
-        if (!result) {
-          return done(null, false, { message: "존재하지 않는 아이디" });
-        }
-        if (cipheredpassword == result.password) {
-          return done(null, result);
-        } else {
-          return done(null, false, { message: "일치하지 않는 비밀번호" });
-        }
-      });
+      try {
+        var cipher = crypto.createCipher("aes-256-ecb", pw);
+        cipher.update(pw, "utf8");
+        var cipherpw = cipher.final("hex");
+        db.collection("login").findOne({ nickname: name }, (err, result) => {
+          if (err) {
+            return done(err);
+          }
+          if (!result) {
+            return done(null, false, { message: "존재하지 않는 아이디" });
+          }
+          if (cipherpw == result.password) {
+            return done(null, result);
+          } else {
+            return done(null, false, { message: "일치하지 않는 비밀번호" });
+          }
+        });
+      } catch (e) {
+        console.log(e);
+      }
     }
   )
 );
