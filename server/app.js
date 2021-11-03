@@ -7,19 +7,21 @@ const methodOverride = require("method-override");
 const passport = require("passport");
 const LocalStrategy = require("passport-local").Strategy;
 const session = require("express-session");
-const { text } = require("body-parser");
+// const { text } = require("body-parser");
 const crypto = require("crypto");
-const { fail } = require("assert");
+// const { fail } = require("assert");
 require("dotenv").config();
 
 var db;
 //use
 app.use(methodOverride("_method"));
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json());
+// app.use(bodyParser.urlencoded({ extended: true }));
+// app.use(bodyParser.json());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(
   session({
-    secret: "비밀코드",
+    secret: "beagteun",
     resave: true,
     saveUninitialized: false,
   })
@@ -33,9 +35,7 @@ app.post("/auth/register", (req, res) => {
     db.collection("login").findOne(
       { nickname: req.body.nickname },
       (err, result) => {
-        if (err) {
-          res.status(500).send(err);
-        } else if (result) {
+        if (result) {
           res.status(401).send("/Unauthorized");
         } else {
           if (req.body.password === req.body.checkpassword) {
@@ -116,35 +116,36 @@ passport.serializeUser((user, done) => {
 });
 
 //메모데이터 삽입
-app.post("/add", (req, res) => {
-  db.collection("memo").insertOne(
-    {
+app.post("/add", async (req, res) => {
+  try {
+    const cntmemo = await db.collection("count").findOne({ name: "메모 수" });
+    await db.collection("memo").insertOne({
+      _id: cntmemo.totalmemo + 1,
       title: req.body.title,
       contents: req.body.contents,
       tag: req.body.tag,
       user: req.body.user,
       date: req.body.date,
       color: req.body.color,
-    },
-    (err) => {
-      if (err) {
-        res.status(400).send({ message: "실패" });
-      }
-      res.status(200).send({ message: "성공" });
-    }
-  );
+    });
+    await db.collection("count").updateOne(
+      {
+        name: "메모 수",
+      },
+      { $inc: { totalmemo: 1 } }
+    );
+    res.status.send({ message: "삽입 성공" });
+  } catch (e) {
+    console.log(e);
+  }
 });
 
 //데이터 삭제
-app.delete("/delete", (req, res) => {
+app.delete("/delete", async (req, res) => {
   try {
-    db.collection("memo").deleteOne({ _id: req.body._id }, (err, result) => {
-      if (err) {
-        console.log(err);
-        res.status(400).send({ message: "삭제 실패" });
-      }
-      res.status(200).send({ message: "삭제 성공" });
-    });
+    const id = parseInt(req.body._id);
+    await db.collection("memo").deleteOne({ _id: id });
+    res.status(200).send({ message: "삭제 성공" });
   } catch (e) {
     console.log(e);
   }
