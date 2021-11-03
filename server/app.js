@@ -12,8 +12,19 @@ const crypto = require("crypto");
 const { parse } = require("path");
 // const { fail } = require("assert");
 require("dotenv").config();
-
 var db;
+
+app.get("/list", (req, res) => {
+  try {
+    db.collection("memo")
+      .find({ user: req.body.user })
+      .toArray((result) => {
+        res.send({ results: result });
+      });
+  } catch (e) {
+    console.log(e);
+  }
+});
 //use
 app.use(methodOverride("_method"));
 // app.use(bodyParser.urlencoded({ extended: true }));
