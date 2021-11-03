@@ -9,6 +9,7 @@ const LocalStrategy = require("passport-local").Strategy;
 const session = require("express-session");
 // const { text } = require("body-parser");
 const crypto = require("crypto");
+const { parse } = require("path");
 // const { fail } = require("assert");
 require("dotenv").config();
 
@@ -105,6 +106,7 @@ passport.use(
         });
       } catch (e) {
         console.log(e);
+        console.log(result);
       }
     }
   )
@@ -134,7 +136,7 @@ app.post("/add", async (req, res) => {
       },
       { $inc: { totalmemo: 1 } }
     );
-    res.status.send({ message: "삽입 성공" });
+    res.status(200).send({ message: "삽입 성공" });
   } catch (e) {
     console.log(e);
   }
@@ -146,6 +148,25 @@ app.delete("/delete", async (req, res) => {
     const id = parseInt(req.body._id);
     await db.collection("memo").deleteOne({ _id: id });
     res.status(200).send({ message: "삭제 성공" });
+  } catch (e) {
+    console.log(e);
+  }
+});
+//데이터 수정
+app.put("/edit", async (req, res) => {
+  try {
+    await db.collection("memo").updateOne(
+      { _id: parseInt(req.body._id) },
+      {
+        $set: {
+          title: req.body.title,
+          contents: req.body.contents,
+          color: req.body.color,
+          tag: req.body.tag,
+        },
+      }
+    );
+    res.status(200).send({ message: "수정성공" });
   } catch (e) {
     console.log(e);
   }
