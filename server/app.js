@@ -14,23 +14,11 @@ const { parse } = require("path");
 require("dotenv").config();
 var db;
 
-app.get("/list", (req, res) => {
-  try {
-    db.collection("memo")
-      .find({ user: req.body.user })
-      .toArray((result) => {
-        res.send({ results: result });
-      });
-  } catch (e) {
-    console.log(e);
-  }
-});
+
 //use
 app.use(methodOverride("_method"));
-// app.use(bodyParser.urlencoded({ extended: true }));
-// app.use(bodyParser.json());
+app.use(express.urlencoded({ extended: false }))
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 app.use(
   session({
     secret: "beagteun",
@@ -40,6 +28,9 @@ app.use(
 );
 app.use(passport.initialize());
 app.use(passport.session());
+
+app.use('/', require('./router/list'))
+app.use('/', require('./router/write'))
 
 //회원가입
 app.post("/auth/register", (req, res) => {
@@ -129,29 +120,29 @@ passport.serializeUser((user, done) => {
 });
 
 //메모데이터 삽입
-app.post("/add", async (req, res) => {
-  try {
-    const cntmemo = await db.collection("count").findOne({ name: "메모 수" });
-    await db.collection("memo").insertOne({
-      _id: cntmemo.totalmemo + 1,
-      title: req.body.title,
-      contents: req.body.contents,
-      tag: req.body.tag,
-      user: req.body.user,
-      date: req.body.date,
-      color: req.body.color,
-    });
-    await db.collection("count").updateOne(
-      {
-        name: "메모 수",
-      },
-      { $inc: { totalmemo: 1 } }
-    );
-    res.status(200).send({ message: "삽입 성공" });
-  } catch (e) {
-    console.log(e);
-  }
-});
+// app.post("/add", async (req, res) => {
+//   try {
+//     const cntmemo = await db.collection("count").findOne({ name: "메모 수" });
+//     await db.collection("memo").insertOne({
+//       _id: cntmemo.totalmemo + 1,
+//       title: req.body.title,
+//       contents: req.body.contents,
+//       tag: req.body.tag,
+//       user: req.body.user,
+//       date: req.body.date,
+//       color: req.body.color,
+//     });
+//     await db.collection("count").updateOne(
+//       {
+//         name: "메모 수",
+//       },
+//       { $inc: { totalmemo: 1 } }
+//     );
+//     res.status(200).send({ message: "삽입 성공" });
+//   } catch (e) {
+//     console.log(e);
+//   }
+// });
 
 //데이터 삭제
 app.delete("/delete", async (req, res) => {
@@ -187,8 +178,12 @@ MongoClient.connect(process.env.DB_URL, (err, client) => {
   if (err) {
     return console.log(err);
   }
-  db = client.db("growth-jibin"); //파일 불러오기
+  db = client.db("growth-jibin");
+  app.db = db;
   app.listen(process.env.PORT, () => {
     console.log("listening on 3000");
   });
 });
+
+
+module.exports = app
