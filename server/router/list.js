@@ -1,5 +1,4 @@
 const router = require('express').Router()
-const db = require('../app')
 
 router.get('/list', (req, res) => {
     try {
