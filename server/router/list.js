@@ -2,7 +2,7 @@ const router = require('express').Router()
 
 router.get('/list', (req, res) => {
     try {
-        req.app.db.collection("memo").find().toArray((err, result) => {
+        req.app.db.collection("memo").find({ user: req.body.nickname }).toArray((err, result) => {
             console.log(result);
             res.status(200).send(result)
         })
