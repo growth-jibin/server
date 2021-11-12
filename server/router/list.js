@@ -3,9 +3,9 @@ const db = require('../app')
 
 router.get('/list', (req, res) => {
     try {
-        req.app.db.collection("memo").find().toArray((result) => {
+        req.app.db.collection("memo").find().toArray((err, result) => {
             console.log(result);
-            res.send({ message: "찾기 성공" })
+            res.status(200).send(result)
         })
     } catch (e) {
         console.log(e);
